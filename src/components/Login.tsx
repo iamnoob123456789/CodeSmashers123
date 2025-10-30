@@ -1,13 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { TrendingUp, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-export function Login({ onNavigate, onSuccess }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { login, isLoading } = useAuth();
+interface LoginProps {
+  onNavigate: (destination: string) => void;
+  onSuccess: () => void;
+}
 
-  const handleSubmit = async (e) => {
+interface AuthContextType {
+  login: (email: string, password: string) => Promise<void>;
+  isLoading: boolean;
+}
+
+export function Login({ onNavigate, onSuccess }: LoginProps): JSX.Element {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const { login, isLoading } = useAuth() as AuthContextType;
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     try {
       await login(email, password);
@@ -15,6 +25,27 @@ export function Login({ onNavigate, onSuccess }) {
     } catch (error) {
       // Error is handled in AuthContext
     }
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setPassword(e.target.value);
+  };
+
+  const handleForgotPassword = (): void => {
+    // Implement forgot password functionality
+    console.log('Forgot password clicked');
+  };
+
+  const handleSignUpClick = (): void => {
+    onNavigate('signup');
+  };
+
+  const handleBackToHome = (): void => {
+    onNavigate('landing');
   };
 
   return (
@@ -38,7 +69,7 @@ export function Login({ onNavigate, onSuccess }) {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 className="w-full pl-10 pr-4 py-2 bg-input-background dark:bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
@@ -54,7 +85,7 @@ export function Login({ onNavigate, onSuccess }) {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 className="w-full pl-10 pr-4 py-2 bg-input-background dark:bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
@@ -63,6 +94,7 @@ export function Login({ onNavigate, onSuccess }) {
 
           <button
             type="button"
+            onClick={handleForgotPassword}
             className="text-sm text-blue-600 hover:underline dark:text-blue-400"
           >
             Forgot Password?
@@ -81,14 +113,14 @@ export function Login({ onNavigate, onSuccess }) {
           <p className="text-sm text-muted-foreground">
             Don't have an account?{' '}
             <button
-              onClick={() => onNavigate('signup')}
+              onClick={handleSignUpClick}
               className="text-blue-600 hover:underline dark:text-blue-400"
             >
               Sign up
             </button>
           </p>
           <button
-            onClick={() => onNavigate('landing')}
+            onClick={handleBackToHome}
             className="text-sm text-muted-foreground hover:underline mt-2"
           >
             Back to home

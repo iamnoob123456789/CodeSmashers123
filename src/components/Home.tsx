@@ -1,8 +1,26 @@
 import React from 'react';
-import { TrendingUp, MessageSquare, LineChart, Shield, Target, FileText, Newspaper, BarChart3 } from 'lucide-react';
+import { TrendingUp, MessageSquare, LineChart, Shield, Target, FileText, Newspaper, BarChart3, LucideIcon } from 'lucide-react';
 
-export function Home({ onNavigate }) {
-  const features = [
+interface HomeProps {
+  onNavigate: (destination: string) => void;
+}
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  action: string;
+  color: string;
+}
+
+interface Stat {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+}
+
+export function Home({ onNavigate }: HomeProps): JSX.Element {
+  const features: Feature[] = [
     {
       icon: MessageSquare,
       title: 'AI Chatbot',
@@ -40,11 +58,27 @@ export function Home({ onNavigate }) {
     },
   ];
 
-  const stats = [
+  const stats: Stat[] = [
     { label: 'Markets Covered', value: '4+', icon: BarChart3 },
     { label: 'AI Features', value: '5+', icon: MessageSquare },
     { label: 'Asset Classes', value: '1000+', icon: TrendingUp },
   ];
+
+  const handleFeatureClick = (action: string): void => {
+    onNavigate(action);
+  };
+
+  const handleStartChatting = (): void => {
+    onNavigate('chat');
+  };
+
+  const handleLearnMore = (): void => {
+    onNavigate('about');
+  };
+
+  const handleGetStarted = (): void => {
+    onNavigate('chat');
+  };
 
   return (
     <div className="min-h-full bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-950">
@@ -66,13 +100,13 @@ export function Home({ onNavigate }) {
 
           <div className="flex flex-wrap gap-4 justify-center">
             <button
-              onClick={() => onNavigate('chat')}
+              onClick={handleStartChatting}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl"
             >
               Start Chatting
             </button>
             <button
-              onClick={() => onNavigate('about')}
+              onClick={handleLearnMore}
               className="px-6 py-3 border-2 border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all"
             >
               Learn More
@@ -115,7 +149,7 @@ export function Home({ onNavigate }) {
               return (
                 <button
                   key={index}
-                  onClick={() => onNavigate(feature.action)}
+                  onClick={() => handleFeatureClick(feature.action)}
                   className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-2xl transition-all border border-border text-left group hover:scale-105"
                 >
                   <div className={`w-12 h-12 bg-gradient-to-br ${feature.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
@@ -141,7 +175,7 @@ export function Home({ onNavigate }) {
               Start using FinChat's AI-powered tools to make informed financial decisions.
             </p>
             <button
-              onClick={() => onNavigate('chat')}
+              onClick={handleGetStarted}
               className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg"
             >
               Get Started Now

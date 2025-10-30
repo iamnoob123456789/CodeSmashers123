@@ -1,8 +1,19 @@
 import React from 'react';
-import { TrendingUp, Target, Zap, Shield, Globe, Users } from 'lucide-react';
+import { TrendingUp, Target, Zap, Shield, Globe, Users, LucideIcon } from 'lucide-react';
 
-export function About() {
-  const values = [
+interface ValueItem {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+interface FeatureItem {
+  title: string;
+  description: string;
+}
+
+export function About(): JSX.Element {
+  const values: ValueItem[] = [
     {
       icon: Target,
       title: 'Precision',
@@ -25,7 +36,7 @@ export function About() {
     },
   ];
 
-  const features = [
+  const features: FeatureItem[] = [
     {
       title: 'Multi-Market Support',
       description: 'Track and analyze assets across US stocks (NYSE/NASDAQ), European stocks (FTSE/DAX), cryptocurrencies, and forex currency pairs all in one platform.',

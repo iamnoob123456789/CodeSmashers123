@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
-import { MessageSquare, Target, LineChart, Newspaper, FileText, Menu, X, Home, Info } from 'lucide-react';
+import { MessageSquare, Target, LineChart, Newspaper, FileText, Menu, X, Home, Info, LucideIcon } from 'lucide-react';
 
-export function Sidebar({ currentPage, onNavigate }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface SidebarProps {
+  currentPage: string;
+  onNavigate: (page: string) => void;
+}
 
-  const menuItems = [
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+export function Sidebar({ currentPage, onNavigate }: SidebarProps): JSX.Element {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const menuItems: MenuItem[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'chat', label: 'Chatbot', icon: MessageSquare },
     { id: 'risk-quiz', label: 'Risk Quiz', icon: Target },
@@ -14,8 +25,16 @@ export function Sidebar({ currentPage, onNavigate }) {
     { id: 'about', label: 'About', icon: Info },
   ];
 
-  const handleNavigate = (page) => {
+  const handleNavigate = (page: string): void => {
     onNavigate(page);
+    setIsOpen(false);
+  };
+
+  const handleToggleMenu = (): void => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleCloseMenu = (): void => {
     setIsOpen(false);
   };
 
@@ -24,7 +43,8 @@ export function Sidebar({ currentPage, onNavigate }) {
       {/* Mobile toggle button */}
       <button
         className="fixed left-4 top-20 z-40 lg:hidden bg-background shadow-md p-2 rounded-lg border border-border hover:bg-accent"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleMenu}
+        aria-label="Toggle menu"
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -33,7 +53,7 @@ export function Sidebar({ currentPage, onNavigate }) {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={handleCloseMenu}
         />
       )}
 

@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { TrendingUp, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-export function Signup({ onNavigate, onSuccess }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const { signup, isLoading } = useAuth();
+interface SignupProps {
+  onNavigate: (destination: string) => void;
+  onSuccess: () => void;
+}
 
-  const handleSubmit = async (e) => {
+interface AuthContextType {
+  signup: (email: string, password: string, confirmPassword: string) => Promise<void>;
+  isLoading: boolean;
+}
+
+export function Signup({ onNavigate, onSuccess }: SignupProps): JSX.Element {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const { signup, isLoading } = useAuth() as AuthContextType;
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     try {
       await signup(email, password, confirmPassword);
@@ -16,6 +26,26 @@ export function Signup({ onNavigate, onSuccess }) {
     } catch (error) {
       // Error is handled in AuthContext
     }
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setPassword(e.target.value);
+  };
+
+  const handleConfirmPasswordChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setConfirmPassword(e.target.value);
+  };
+
+  const handleSignInClick = (): void => {
+    onNavigate('login');
+  };
+
+  const handleBackToHome = (): void => {
+    onNavigate('landing');
   };
 
   return (
@@ -39,7 +69,7 @@ export function Signup({ onNavigate, onSuccess }) {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 className="w-full pl-10 pr-4 py-2 bg-input-background dark:bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
@@ -55,7 +85,7 @@ export function Signup({ onNavigate, onSuccess }) {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 className="w-full pl-10 pr-4 py-2 bg-input-background dark:bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
@@ -71,7 +101,7 @@ export function Signup({ onNavigate, onSuccess }) {
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={handleConfirmPasswordChange}
                 className="w-full pl-10 pr-4 py-2 bg-input-background dark:bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
               />
@@ -91,14 +121,14 @@ export function Signup({ onNavigate, onSuccess }) {
           <p className="text-sm text-muted-foreground">
             Already have an account?{' '}
             <button
-              onClick={() => onNavigate('login')}
+              onClick={handleSignInClick}
               className="text-blue-600 hover:underline dark:text-blue-400"
             >
               Sign in
             </button>
           </p>
           <button
-            onClick={() => onNavigate('landing')}
+            onClick={handleBackToHome}
             className="text-sm text-muted-foreground hover:underline mt-2"
           >
             Back to home

@@ -2,7 +2,7 @@ import React from 'react';
 import { History, Check, FileText, MessageSquare } from 'lucide-react';
 import { Card } from './ui/card';
 
-export function SessionsDemo() {
+export function SessionsDemo(): JSX.Element {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
@@ -102,7 +102,7 @@ export function SessionsDemo() {
               1
             </div>
             <div>
-              <p className="text-sm">Go to the <span>Chatbot</span> or <span>Documents</span> page</p>
+              <p className="text-sm">Go to the <span className="font-medium">Chatbot</span> or <span className="font-medium">Documents</span> page</p>
             </div>
           </div>
           <div className="flex items-start gap-3">

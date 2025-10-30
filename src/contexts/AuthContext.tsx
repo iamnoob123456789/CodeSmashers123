@@ -8,13 +8,14 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  currentUser: User | null; // Alias for user
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -95,8 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast.success('Logged out successfully');
   };
 
+  const contextValue = {
+    user,
+    currentUser: user,
+    login,
+    signup,
+    logout,
+    isLoading
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

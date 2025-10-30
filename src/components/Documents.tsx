@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import { Upload, FileText, MessageSquare, Send, History, Plus, Trash2, FolderOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
@@ -8,12 +8,49 @@ import { toast } from 'sonner';
 import { Badge } from './ui/badge';
 import { useDocument } from '../contexts/DocumentContext';
 
-export function Documents() {
-  const [uploadedFile, setUploadedFile] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [question, setQuestion] = useState('');
-  const [isAsking, setIsAsking] = useState(false);
-  const [showSessions, setShowSessions] = useState(false);
+interface DocumentMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp?: Date;
+}
+
+interface DocumentAnalysis {
+  summary: string;
+  keyPoints: string[];
+  fileName?: string;
+}
+
+interface DocumentSession {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  analysis: DocumentAnalysis;
+  messages: DocumentMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface DocumentContextType {
+  documentSessions: DocumentSession[];
+  currentDocumentSession: DocumentSession | null;
+  createDocumentSession: (file: File, analysis: DocumentAnalysis) => DocumentSession;
+  loadDocumentSession: (sessionId: string) => void;
+  deleteDocumentSession: (sessionId: string) => void;
+  addDocumentMessage: (message: DocumentMessage) => void;
+  clearCurrentSession: () => void;
+}
+
+interface UploadedFile {
+  name: string;
+  size?: number;
+}
+
+export function Documents(): JSX.Element {
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [question, setQuestion] = useState<string>('');
+  const [isAsking, setIsAsking] = useState<boolean>(false);
+  const [showSessions, setShowSessions] = useState<boolean>(false);
 
   const {
     documentSessions,
@@ -23,9 +60,9 @@ export function Documents() {
     deleteDocumentSession,
     addDocumentMessage,
     clearCurrentSession,
-  } = useDocument();
+  } = useDocument() as DocumentContextType;
 
-  const onDrop = async (acceptedFiles) => {
+  const onDrop = async (acceptedFiles: File[]): Promise<void> => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       if (file.type === 'application/pdf') {
@@ -43,12 +80,12 @@ export function Documents() {
     multiple: false,
   });
 
-  const analyzeDocument = async (file) => {
+  const analyzeDocument = async (file: File): Promise<void> => {
     setIsAnalyzing(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      const mockAnalysis = {
+      const mockAnalysis: DocumentAnalysis = {
         fileName: file.name,
         summary: `This document appears to be a financial report containing detailed analysis of market trends, investment opportunities, and risk assessments. It includes comprehensive data on various asset classes including stocks, bonds, and alternative investments. The document emphasizes diversification strategies and long-term growth potential across different market sectors.`,
         keyPoints: [
@@ -69,13 +106,13 @@ export function Documents() {
     }
   };
 
-  const handleAskQuestion = async () => {
+  const handleAskQuestion = async (): Promise<void> => {
     if (!question.trim() || !currentDocumentSession) return;
 
     const userQuestion = question.trim();
     setQuestion('');
     
-    const userMessage = { role: 'user', content: userQuestion };
+    const userMessage: DocumentMessage = { role: 'user', content: userQuestion };
     addDocumentMessage(userMessage);
     
     setIsAsking(true);
@@ -85,7 +122,7 @@ export function Documents() {
 
       const mockResponse = `Based on the document "${currentDocumentSession.fileName}", here's what I found regarding your question: "${userQuestion}"\n\nThe document suggests that ${userQuestion.toLowerCase().includes('risk') ? 'a balanced approach to risk management is crucial, with emphasis on diversification and regular portfolio rebalancing' : userQuestion.toLowerCase().includes('return') ? 'expected returns vary by asset class, with historical data showing 7-10% annual returns for diversified portfolios' : 'this information can be found in the detailed analysis section, which recommends consulting with a financial advisor for personalized guidance'}.`;
 
-      const assistantMessage = { role: 'assistant', content: mockResponse };
+      const assistantMessage: DocumentMessage = { role: 'assistant', content: mockResponse };
       addDocumentMessage(assistantMessage);
     } catch (error) {
       toast.error('Failed to process question');
@@ -94,15 +131,37 @@ export function Documents() {
     }
   };
 
-  const handleNewDocument = () => {
+  const handleNewDocument = (): void => {
     setUploadedFile(null);
     clearCurrentSession();
   };
 
-  const handleLoadSession = (sessionId) => {
+  const handleLoadSession = (sessionId: string): void => {
     loadDocumentSession(sessionId);
-    setUploadedFile({ name: documentSessions.find(s => s.id === sessionId)?.fileName });
+    const session = documentSessions.find(s => s.id === sessionId);
+    if (session) {
+      setUploadedFile({ name: session.fileName });
+    }
     setShowSessions(false);
+  };
+
+  const handleQuestionChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+    setQuestion(e.target.value);
+  };
+
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAskQuestion();
+    }
+  };
+
+  const handleDeleteSession = (e: React.MouseEvent<HTMLButtonElement>, sessionId: string, fileName: string): void => {
+    e.stopPropagation();
+    if (confirm(`Delete "${fileName}"?`)) {
+      deleteDocumentSession(sessionId);
+      toast.success('Document session deleted');
+    }
   };
 
   return (
@@ -147,13 +206,7 @@ export function Documents() {
                             </button>
                             <button
                               className="p-1 hover:bg-destructive/10 text-destructive rounded"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm(`Delete "${session.fileName}"?`)) {
-                                  deleteDocumentSession(session.id);
-                                  toast.success('Document session deleted');
-                                }
-                              }}
+                              onClick={(e) => handleDeleteSession(e, session.id, session.fileName)}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -257,13 +310,7 @@ export function Documents() {
                                 </button>
                                 <button
                                   className="p-1 hover:bg-destructive/10 text-destructive rounded"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (confirm(`Delete "${session.fileName}"?`)) {
-                                      deleteDocumentSession(session.id);
-                                      toast.success('Document session deleted');
-                                    }
-                                  }}
+                                  onClick={(e) => handleDeleteSession(e, session.id, session.fileName)}
                                 >
                                   <Trash2 className="w-3 h-3" />
                                 </button>
@@ -384,17 +431,12 @@ export function Documents() {
               <div className="flex gap-2">
                 <Textarea
                   value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  onChange={handleQuestionChange}
                   placeholder="Ask a question about the document..."
                   className="resize-none"
                   rows={2}
                   disabled={isAsking}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAskQuestion();
-                    }
-                  }}
+                  onKeyPress={handleKeyPress}
                 />
                 <Button
                   onClick={handleAskQuestion}

@@ -2,10 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface ThemeContextType {
   isDarkMode: boolean;
+  theme: 'light' | 'dark';
   toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -24,9 +25,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [isDarkMode]);
 
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  const theme = isDarkMode ? 'dark' : 'light';
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -34,8 +36,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
   }
-  return context;
+  return {
+    theme: context.isDarkMode ? 'dark' : 'light',
+    isDarkMode: context.isDarkMode,
+    toggleTheme: context.toggleTheme
+  };
 }

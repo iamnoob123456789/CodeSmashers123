@@ -1,8 +1,18 @@
 import React from 'react';
-import { TrendingUp, MessageSquare, LineChart, Shield, ArrowRight } from 'lucide-react';
+import { TrendingUp, MessageSquare, LineChart, Shield, ArrowRight, LucideIcon } from 'lucide-react';
 
-export function Landing({ onNavigate }) {
-  const features = [
+interface LandingProps {
+  onNavigate: (destination: string) => void;
+}
+
+interface Feature {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+export function Landing({ onNavigate }: LandingProps): JSX.Element {
+  const features: Feature[] = [
     {
       icon: MessageSquare,
       title: 'AI-Powered Chat',
@@ -20,6 +30,22 @@ export function Landing({ onNavigate }) {
     },
   ];
 
+  const handleLoginClick = (): void => {
+    onNavigate('login');
+  };
+
+  const handleSignUpClick = (): void => {
+    onNavigate('signup');
+  };
+
+  const handleGetStartedClick = (): void => {
+    onNavigate('signup');
+  };
+
+  const handleCreateAccountClick = (): void => {
+    onNavigate('signup');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-gray-900 dark:via-blue-950 dark:to-gray-900">
       {/* Header */}
@@ -32,13 +58,13 @@ export function Landing({ onNavigate }) {
           <div className="flex items-center gap-3">
             <button
               className="px-4 py-2 rounded-lg hover:bg-accent transition-colors"
-              onClick={() => onNavigate('login')}
+              onClick={handleLoginClick}
             >
               Login
             </button>
             <button
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all"
-              onClick={() => onNavigate('signup')}
+              onClick={handleSignUpClick}
             >
               Sign Up
             </button>
@@ -64,7 +90,7 @@ export function Landing({ onNavigate }) {
           
           <button
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl inline-flex items-center gap-2"
-            onClick={() => onNavigate('signup')}
+            onClick={handleGetStartedClick}
           >
             Get Started
             <ArrowRight className="w-5 h-5" />
@@ -108,7 +134,7 @@ export function Landing({ onNavigate }) {
             </p>
             <button
               className="px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg"
-              onClick={() => onNavigate('signup')}
+              onClick={handleCreateAccountClick}
             >
               Create Free Account
             </button>

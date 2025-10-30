@@ -1,15 +1,41 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import { Send, Bot, User, Plus, History, Trash2, Edit2, Check, X } from 'lucide-react';
 import { useChat } from '../contexts/ChatContext';
 import { toast } from 'sonner';
 
-export function ChatInterface() {
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSessions, setShowSessions] = useState(false);
-  const [editingSessionId, setEditingSessionId] = useState(null);
-  const [editingName, setEditingName] = useState('');
-  const messagesEndRef = useRef(null);
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface ChatSession {
+  id: string;
+  name: string;
+  messages: ChatMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ChatContextType {
+  currentSession: ChatSession | null;
+  sessions: ChatSession[];
+  addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => void;
+  createSession: () => void;
+  loadSession: (sessionId: string) => void;
+  deleteSession: (sessionId: string) => void;
+  renameSession: (sessionId: string, newName: string) => void;
+}
+
+export function ChatInterface(): JSX.Element {
+  const [input, setInput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showSessions, setShowSessions] = useState<boolean>(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const {
     currentSession,
     sessions,
@@ -18,9 +44,9 @@ export function ChatInterface() {
     loadSession,
     deleteSession,
     renameSession,
-  } = useChat();
+  } = useChat() as ChatContextType;
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (): void => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -28,7 +54,7 @@ export function ChatInterface() {
     scrollToBottom();
   }, [currentSession?.messages]);
 
-  const handleSend = async () => {
+  const handleSend = async (): Promise<void> => {
     if (!input.trim() || !currentSession) return;
 
     const userMessage = input.trim();
@@ -59,10 +85,21 @@ export function ChatInterface() {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>): void => {
+    setInput(e.target.value);
+  };
+
+  const handleEditingKeyPress = (e: KeyboardEvent<HTMLInputElement>, sessionId: string): void => {
+    if (e.key === 'Enter') {
+      renameSession(sessionId, editingName);
+      setEditingSessionId(null);
     }
   };
 
@@ -112,15 +149,10 @@ export function ChatInterface() {
                           <input
                             type="text"
                             value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setEditingName(e.target.value)}
                             className="flex-1 px-2 py-1 text-sm bg-input border border-border rounded"
                             autoFocus
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter') {
-                                renameSession(session.id, editingName);
-                                setEditingSessionId(null);
-                              }
-                            }}
+                            onKeyPress={(e: KeyboardEvent<HTMLInputElement>) => handleEditingKeyPress(e, session.id)}
                           />
                           <button
                             className="p-1 hover:bg-muted rounded"
@@ -157,7 +189,7 @@ export function ChatInterface() {
                           <div className="flex items-center gap-1">
                             <button
                               className="p-1 hover:bg-muted rounded"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.stopPropagation();
                                 setEditingSessionId(session.id);
                                 setEditingName(session.name);
@@ -167,7 +199,7 @@ export function ChatInterface() {
                             </button>
                             <button
                               className="p-1 hover:bg-destructive/10 text-destructive rounded"
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.stopPropagation();
                                 if (confirm(`Delete "${session.name}"?`)) {
                                   deleteSession(session.id);
@@ -277,7 +309,7 @@ export function ChatInterface() {
         <div className="flex gap-2">
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about finance..."
             className="flex-1 min-h-[60px] px-3 py-2 bg-input-background dark:bg-input border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-600"
